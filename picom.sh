@@ -48,17 +48,23 @@ install_picom_git() {
     done
 
     printf "${red}Installing Picom-git...${reset}\n"
-    local user_home
-    user_home=$(getent passwd "$SUDO_USER" | cut -d: -f6)
+    cd /opt || { echo "Failed to change directory to /opt"; exit 1; }
 
-    cd "$user_home/Downloads" || { echo "Failed to change directory to $user_home/Downloads"; exit 1; }
-    git clone https://github.com/yshui/picom
-    cd picom || exit
+    # If the repository already exists, pull the latest changes
+    if [ -d "picom" ]; then
+	    sudo rm -rf picom
+        git clone https://github.com/yshui/picom
+        sudo chown "$SUDO_USER":"$SUDO_USER" /opt/picom
+        cd picom || exit
+    else
+        git clone https://github.com/yshui/picom
+        sudo chown "$SUDO_USER":"$SUDO_USER" /opt/picom
+        cd picom || exit
+    fi
+
     meson setup --buildtype=release build
     ninja -C build
     sudo ninja -C build install
-    cd ..
-    sudo rm -rf picom
 
     echo ''
     if picom --version &> /dev/null; then
@@ -84,6 +90,7 @@ install_picom() {
 remove_picom() {
     if dpkg -s picom &> /dev/null; then
         printf "${red}Removing Picom installed via apt...${reset}\n"
+	    pkill picom
         sudo apt purge -y picom
 
         echo ''
@@ -94,25 +101,18 @@ remove_picom() {
         fi
     else
         printf "${yellow}Picom is not installed via apt${reset}\n"
+        echo ''
         printf "${red}Removing Picom-git...${reset}\n"
 
-        for package in "${packages[@]}"; do
-            install_if_missing "$package"
-        done
+        cd /opt || { echo "Failed to change directory to /opt"; exit 1; }
 
-        local user_home
-        user_home=$(getent passwd "$SUDO_USER" | cut -d: -f6)
-
-        cd "$user_home/Downloads" || { echo "Failed to change directory to $user_home/Downloads"; exit 1; }
-        git clone https://github.com/yshui/picom
-        cd picom || exit
-        meson setup --buildtype=release build
-        ninja -C build
-        sudo ninja -C build uninstall
-        cd ..
-        sudo rm -rf picom
-        echo ''
-        printf "${green}Picom-git removed successfully.${reset}\n"
+        if [ -d "picom" ]; then
+            #pkill picom
+	    cd picom || exit
+            sudo ninja -C build uninstall
+        else
+            printf "${red}No previous installation of Picom-git found. Please install it first.${reset}\n"
+        fi
 
         echo ''
         if picom --version &> /dev/null; then
