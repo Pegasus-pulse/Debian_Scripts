@@ -79,6 +79,7 @@ install_ly() {
     zig build
     sudo zig build installsystemd
     sudo systemctl enable ly.service
+    sudo systemctl disable getty@tty2.service
     cd ..
     sudo rm -rf ly
 
@@ -108,10 +109,34 @@ update_ly() {
     fi
 }
 
+remove_ly () {
+    printf "${red}Removing Ly Display Manager...${reset}\n"
+    sudo rm /usr/bin/ly
+    sudo rm /etc/pam.d/ly
+    sudo rm -r /etc/ly
+    sudo rm /lib/systemd/system/ly.service
+    #sudo rm /usr/lib/systemd/system/ly.service
+
+    if [ $? -ne 0 ]; then
+        printf "${red}Failed to remove Ly Display Manager files.${reset}\n"
+        return 1
+    fi
+
+    sudo systemctl daemon-reload
+    sudo systemctl enable getty@tty2.service
+
+    if ly --version &> /dev/null; then
+        printf "${red}Removing Ly Display Manager failed${reset}\n"
+    else
+         printf "${green}Ly Display Manager removed successfully.${reset}\n"
+    fi
+}
+
 prompt_user() {
     while true; do
         echo "1) Install Ly"
         echo "2) Update Ly"
+        echo "3) Remove Ly"
 
         echo ''
         printf "${green}Pick an option by typing its number: ${reset}"
@@ -124,6 +149,10 @@ prompt_user() {
                 ;;
             2 )
                 update_ly
+                break
+                ;;
+            3 )
+                remove_ly
                 break
                 ;;
             * )
