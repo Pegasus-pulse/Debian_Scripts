@@ -42,7 +42,7 @@ install_if_missing() {
     fi
 }
 
-install_neovim() {
+install_update_neovim() {
     for package in "${packages[@]}"; do
         install_if_missing "$package"
     done
@@ -63,7 +63,7 @@ install_neovim() {
     sudo rm -rf neovim
 
     echo ''
-    if dpkg -s picom &> /dev/null; then
+    if dpkg -s neovim &> /dev/null; then
         printf "${green}Neovim installation complete.${reset}\n"
     else
         printf "${red}Neovim installation failed.${reset}\n"
@@ -84,7 +84,7 @@ remove_neovim() {
 
 prompt_user() {
     while true; do
-        echo "1) Install Neovim"
+        echo "1) Install/Update Neovim"
         echo "2) Remove Neovim"
 
         echo ''
@@ -93,7 +93,7 @@ prompt_user() {
 
         case $choice in
             1 )
-                install_neovim
+                install_update_neovim
                 break
                 ;;
             2 )
