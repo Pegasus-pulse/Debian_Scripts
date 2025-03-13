@@ -52,10 +52,16 @@ install_picom_git() {
 
     # If the repository already exists, pull the latest changes
     if [ -d "picom" ]; then
-	    sudo rm -rf picom
-        git clone https://github.com/yshui/picom
-        sudo chown "$SUDO_USER":"$SUDO_USER" /opt/picom
-        cd picom || exit
+        if [ -d "picom/.git" ]; then
+            cd picom || exit
+            git pull origin next
+        else
+            printf "${yellow}The 'picom' directory exists but is not a git repository. Deleting and recloning.${reset}\n"
+            sudo rm -rf picom
+            git clone https://github.com/yshui/picom
+            sudo chown "$SUDO_USER":"$SUDO_USER" /opt/picom
+            cd picom || exit
+        fi
     else
         git clone https://github.com/yshui/picom
         sudo chown "$SUDO_USER":"$SUDO_USER" /opt/picom
@@ -125,8 +131,8 @@ remove_picom() {
 
 prompt_user() {
     while true; do
-        echo "1) Install Picom-git"
-        echo "2) Install Picom(apt)"
+        echo "1) Install/Update Picom-git"
+        echo "2) Install/Update Picom(apt)"
         echo "3) Remove Picom-git or Picom(apt)"
 
         echo ''
