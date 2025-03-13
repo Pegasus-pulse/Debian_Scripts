@@ -58,7 +58,7 @@ install_update_neovim() {
     make CMAKE_BUILD_TYPE=RelWithDebInfo
     cd build || exit
     cpack -G DEB
-    sudo dpkg -i nvim-linux64.deb
+    sudo dpkg -i nvim-linux-x86_64.deb
     cd "$user_home/Downloads" || { echo "Failed to change directory to $user_home/Downloads"; exit 1; }
     sudo rm -rf neovim
 
