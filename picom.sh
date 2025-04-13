@@ -54,7 +54,11 @@ install_picom_git() {
     if [ -d "picom" ]; then
         if [ -d "picom/.git" ]; then
             cd picom || exit
-            git pull origin next
+            output=$(git pull origin next)
+            if echo "$output" | grep -q 'Already up to date.'; then
+                printf "${green}Picom-git is already up to date.'${reset}\n"
+                exit 0
+            fi
         else
             printf "${yellow}The 'picom' directory exists but is not a git repository. Deleting and recloning.${reset}\n"
             sudo rm -rf picom
