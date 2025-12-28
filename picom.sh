@@ -60,15 +60,16 @@ install_picom_git() {
                 exit 0
             fi
         else
-            printf "${yellow}The 'picom' directory exists but is not a git repository. Deleting and recloning.${reset}\n"
+            printf "${yellow}The 'picom' directory exists but is not a git repository. Moving it to /tmp to start fresh.${reset}\n"
+            sudo mv "picom" /tmp/
             sudo rm -rf picom
             git clone https://github.com/yshui/picom
-            sudo chown "$SUDO_USER":"$SUDO_USER" /opt/picom
+            sudo chown -R "$SUDO_USER":"$SUDO_USER" /opt/picom
             cd picom || exit
         fi
     else
         git clone https://github.com/yshui/picom
-        sudo chown "$SUDO_USER":"$SUDO_USER" /opt/picom
+        sudo chown -R "$SUDO_USER":"$SUDO_USER" /opt/picom
         cd picom || exit
     fi
 

@@ -43,6 +43,10 @@ install_if_missing() {
 }
 
 install_update_neovim() {
+    if dpkg -s neovim &> /dev/null; then
+        sudo apt remove -y neovim neovim-runtime
+    fi
+
     for package in "${packages[@]}"; do
         install_if_missing "$package"
     done
@@ -52,13 +56,29 @@ install_update_neovim() {
     user_home=$(getent passwd "$SUDO_USER" | cut -d: -f6)
 
     cd "$user_home/Downloads" || { echo "Failed to change directory to $user_home/Downloads"; exit 1; }
-    git clone https://github.com/neovim/neovim # Neovim gitrepo is close to 300 MB
+
+    if [ -d "neovim" ]; then
+        printf "${yellow}'neovim' directory found. Checking if it's a valid git repository...${reset}\n"
+        if ! (git -C neovim rev-parse --is-inside-work-tree > /dev/null 2>&1); then
+            printf "${yellow}'neovim' folder is not a git repository. Moving it to /tmp to start fresh.${reset}\n"
+            sudo mv "neovim" /tmp/
+            git clone https://github.com/neovim/neovim # Neovim gitrepo is close to 340 MB
+        else
+            printf "${green}Existing Neovim git repository found. Proceeding with update/build.${reset}\n"
+            git -C neovim fetch --all
+        fi
+    else
+        printf "${yellow}No 'neovim' folder found. Will clone from GitHub.${reset}\n"
+        git clone https://github.com/neovim/neovim
+    fi
+
     cd neovim || exit
     git checkout stable # To install the stable release
     make CMAKE_BUILD_TYPE=RelWithDebInfo
     cd build || exit
     cpack -G DEB
-    sudo dpkg -i nvim-linux-x86_64.deb
+    sudo cp ./nvim-linux-x86_64.deb /tmp/nvim-linux-x86_64.deb
+    sudo apt-get install /tmp/nvim-linux-x86_64.deb
     cd "$user_home/Downloads" || { echo "Failed to change directory to $user_home/Downloads"; exit 1; }
     sudo rm -rf neovim
 
